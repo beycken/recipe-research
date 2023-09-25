@@ -1,0 +1,25 @@
+<%= form_tag("#search", method: "get", remote: false) do %>
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
+      <div>
+        <div class="form-group">
+          <%= label_tag :ingredients, "Ingrédient (séparés par ; ou ,)" %>
+          <%= text_field_tag :ingredients, params[:ingredients], class: "form-control" %>
+        </div>
+      </div>
+      <div>
+        <div>
+          <%= button_tag(id: "searh", :class => "btn btn-info btn-lg cursor-pointer h-100") do %>
+            <i class="fa fa-search me-1"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<h1><%= @one_ingredient_matches_recipes&.count %> & <%= @recipes&.count %></h1>
+
+<% (@recipes || @one_ingredient_matches_recipes).each do |recipe| %>
+  <%= recipe.name %>
+<% end %>
