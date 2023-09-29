@@ -1,30 +1,40 @@
 class HomeController < ApplicationController
   def main
-    if params["ingredients"].to_s.split(';').to_a.any?
+    if params["ingredients"].present?
       @ingredients = params["ingredients"].to_s.split(';').map{|val| "%#{val.strip}%" }
-      @one_ingredient_matches_recipes = Recipe.includes(compositings: :ingredients).where("compositings.ingredient.name ILIKE ANY ( array[?] )", @ingredients)
-      # @recipes = (get_recipes_from_ingredient + @one_ingredient_matches_recipes).uniq
-      # @recipes = @one_ingredient_matches_recipes.includes(:ingredients).where("ingredients.name ILIKE ALL ( array[?] )", @ingredients)
+      @recipes = Recipe.where(id: search_recipes(@ingredients).sort_by { |recipe| -recipe.ingredients.size }.map(&:id)).paginate(page: params[:page], per_page: 50)
     else
-      @recipes = Recipe.all
+      @recipes = Recipe.paginate(page: params[:page], per_page: 50)
     end
   end
 
   private
 
-  def get_recipes_from_ingredient
-    if @ingredients.count <= 2
-      return @one_ingredient_matches_recipes.includes(:ingredients).where("ingredients.name ILIKE ALL ( array[?] )", @ingredients)
-    end
+  def compose_request(ingredients)
+    ingredients.map{|ingredient| "ingredients.name ILIKE ?"}.join(' AND ')
+  end
+
+  def search_recipes(all_ingredients)
+    final_scope = Recipe.includes(:ingredients).joins(:ingredients).where("ingredients.name ILIKE ANY ( array[?] )", all_ingredients)
+    return final_scope if all_ingredients.one?
+    return (final_scope.where(compose_request(all_ingredients), *all_ingredients).or(final_scope)).distinct if all_ingredients.size == 2
 
     i = 2
-    scope, finale_scope = Recipe.none.includes(:ingredients)
-    (ingredients.count - 2).to_i.times do
-      ingredients.combination(i).to_a.each do |combination_array|
-        scope += @one_ingredient_matches_recipes.where("ingredients.name ILIKE ALL ( array[?] )", combination_array)
-        i += 1
-      end
-      final_scope = scope.uniq + final_scope
+    scope_combination_tmp = final_scope
+    (all_ingredients.size - 2 ).times do
+      scope_combination = search_for_combination(ingredients: all_ingredients, number_combination: i, scope: scope_combination_tmp)
+      scope_combination_tmp = scope_combination
+      final_scope = scope_combination.or(final_scope)
+      i += 1
     end
+    (final_scope.where(compose_request(all_ingredients), *all_ingredients).or(final_scope)).distinct
+  end
+
+  def search_for_combination(ingredients: , number_combination:, scope: )
+    tmp_scope = Recipe.none
+    ingredients.combination(number_combination).each do |combination|
+      tmp_scope = tmp_scope.or(scope.where(compose_request(combination), *combination))
+    end
+    tmp_scope
   end
 end
