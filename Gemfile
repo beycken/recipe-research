@@ -30,8 +30,6 @@ gem "jbuilder"
 # Use Redis adapter to run Action Cable in production
 gem "redis", "~> 4.0"
 
-gem "font-awesome-sass", "~> 6.4.2"
-
 gem "will_paginate", "~> 3.0"
 gem 'will_paginate-bootstrap'
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
