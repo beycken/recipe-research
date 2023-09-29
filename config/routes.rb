@@ -5,5 +5,4 @@ Rails.application.routes.draw do
   # root "articles#index"
 
   root "home#main"
-  resource :recipes, only: [:index, :show]
 end
