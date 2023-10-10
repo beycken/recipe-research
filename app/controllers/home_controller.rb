@@ -21,16 +21,16 @@ class HomeController < ApplicationController
 
   private
 
-  def compose_request(ingredients)
-    ingredients.map{|ingredient| "ingredients.name ILIKE ?"}.join(' AND ')
-  end
-
   ##### First Try #####
+  # def compose_request(ingredients)
+  #   ingredients.map{|ingredient| "ingredients.name ILIKE ?"}.join(' AND ')
+  # end
+  # 
   # def search_recipes(all_ingredients)
   #   final_scope = Recipe.includes(:ingredients).joins(:ingredients).where("ingredients.name ILIKE ANY ( array[?] )", all_ingredients)
   #   return final_scope if all_ingredients.one?
   #   return (final_scope.where(compose_request(all_ingredients), *all_ingredients).or(final_scope)).distinct if all_ingredients.size == 2
-
+  # 
   #   i = 2
   #   scope_combination_tmp = final_scope
   #   (all_ingredients.size - 2 ).times do
@@ -51,9 +51,18 @@ class HomeController < ApplicationController
   # end
 
   ##### Second Try #####
+  # def compose_request(ingredients)
+  #   ingredients.map{|ingredient| "ingredients.name ILIKE ?"}.join(' AND ')
+  # end
+  # 
+  # def search_recipes(all_ingredients)
+  #   (1..all_ingredients.count).flat_map{|size| all_ingredients.combination(size).to_a }.inject(Recipe.none) do |acc, combination|
+  #     acc.or(Recipe.joins(:ingredients).where(compose_request(combination), *combination))
+  #   end
+  # end
+
+  ##### Second Try bis #####
   def search_recipes(all_ingredients)
-    (1..all_ingredients.count).flat_map{|size| all_ingredients.combination(size).to_a }.inject(Recipe.none) do |acc, combination|
-      acc.or(Recipe.joins(:ingredients).where(compose_request(combination), *combination))
-    end
+    Recipe.joins(:ingredients).where("ingredients.name ILIKE ANY ( array[?] )", all_ingredients)
   end
 end
