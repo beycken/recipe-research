@@ -41,6 +41,7 @@ class HomeController < ApplicationController
   #   end
   #   (final_scope.where(compose_request(all_ingredients), *all_ingredients).or(final_scope)).distinct
   # end
+  # 
   # def search_for_combination(ingredients: , number_combination:, scope: )
   #   tmp_scope = Recipe.none
   #   ingredients.combination(number_combination).each do |combination|
@@ -51,7 +52,7 @@ class HomeController < ApplicationController
 
   ##### Second Try #####
   def search_recipes(all_ingredients)
-    (1..all_ingredients.count).flat_map{|size| all_ingredients.combination(size).to_a }.inject(Recipe.group("compositings.recipe_id").none) do |acc, combination|
+    (1..all_ingredients.count).flat_map{|size| all_ingredients.combination(size).to_a }.inject(Recipe.none) do |acc, combination|
       acc.or(Recipe.joins(:ingredients).where(compose_request(combination), *combination))
     end
   end
